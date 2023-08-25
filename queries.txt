@@ -1,0 +1,129 @@
+-- inserts:
+
+INSERT INTO address (address_id, street, city, state, postalcode, country)
+VALUES
+    ('b9a1ac15-9b56-4d6a-8710-6629b7f203fe', 'Independetei', 'Bucuresti', 'Bucuresti', 12345, 'Romania'),
+    ('b97ae276-368e-41f1-bf98-a92c9843198c', 'Calea Bucuresti', 'Brasov', 'Brasov', 67890, 'Romania');
+
+
+INSERT INTO person (person_id, name, phoneNumber, emailAddress, address_id)
+VALUES
+    ('2429a4f5-1000-49d9-9e34-0618cef99a42', 'David Andrei', '0744 444 444', 'andrei@yahoo.com', (SELECT address_id FROM address WHERE street = 'Independetei')),
+    ('e3cc75dd-0314-43a5-96b1-99a164463ff6', 'Popescu Marian', '0744 444 444', 'marian@yahoo.com', (SELECT address_id FROM address WHERE street = 'Lujerului')),
+    ('a756f33f-2133-42c3-8fdb-56b096704016', 'Popescu Daniel', '0755 555 555', 'daniel@yahoo.com', (SELECT address_id FROM address WHERE street = 'Calea Bucuresti'));
+
+
+INSERT INTO professor (professor_id, salary, staffNumber, yearsOfService, numberOfClasses, person_id)
+VALUES
+    ('1e102000-f14c-447c-a9b1-3c5774ad2469', 60000, 101, 5, 3, (SELECT person_id FROM person WHERE name = 'David Andrei'));
+
+
+INSERT INTO student (student_id, studentNumber, averageMark, advisor_id, person_id)
+VALUES
+	('d61f55f8-0425-44e5-b7c5-528c21a03c56', 1002, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Marian')),
+    ('2e113759-3ec2-4707-be9f-4c76cb5570a4', 1001, 85, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Daniel'));
+
+
+INSERT INTO advisorship (advisorship_id, professor_id, student_id)
+VALUES
+	('227a5d30-306d-45bc-9386-114622ff4a5e', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1002)),
+    ('7736d835-3170-4746-a6f2-b6087719e645', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1001));
+
+
+-- select 
+
+SELECT * from student;
+SELECT * from professor;
+
+-- corespondenta profesor -> student
+SELECT
+    p_professor.name AS professor_name,
+    p_student.name AS student_name
+FROM
+    advisorship
+INNER JOIN
+    professor ON advisorship.professor_id = professor.professor_id
+INNER JOIN
+    student ON advisorship.student_id = student.student_id
+INNER JOIN
+    person AS p_professor ON professor.person_id = p_professor.person_id
+INNER JOIN
+    person AS p_student ON student.person_id = p_student.person_id;
+    
+-- verificare a numarului de studenti din grija profesorilor
+    
+SELECT
+    pp.name AS professor_name,
+    COUNT(a.advisorship_id) AS num_advised_students
+FROM
+    professor AS p
+INNER JOIN
+    person AS pp ON p.person_id = pp.person_id
+LEFT JOIN
+    advisorship AS a ON p.professor_id = a.professor_id
+GROUP BY
+    pp.person_id;
+    
+-- update
+
+UPDATE professor SET salary = 75000
+WHERE professor_id = '1e102000-f14c-447c-a9b1-3c5774ad2469';
+
+UPDATE professor SET yearsOfService = 6
+WHERE professor_id = '1e102000-f14c-447c-a9b1-3c5774ad2469';
+
+SELECT * from professor;
+
+-- delete
+
+DELETE from advisorship where advisorship_id = '227a5d30-306d-45bc-9386-114622ff4a5e';
+
+DELETE FROM student
+WHERE student_id = 'd61f55f8-0425-44e5-b7c5-528c21a03c56';
+
+
+INSERT INTO advisorship (advisorship_id, professor_id, student_id)
+VALUES
+	('227a5d30-306d-45bc-9386-114622ff4a5e', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1002));
+    
+INSERT INTO student (student_id, studentNumber, averageMark, advisor_id, person_id)
+VALUES
+	('d61f55f8-0425-44e5-b7c5-528c21a03c56', 1002, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Marian'));
+    
+-- verificare limita de 5
+
+
+INSERT INTO person (person_id, name, phoneNumber, emailAddress, address_id)
+VALUES
+    ('13619587-562b-447b-b38d-dac7b42db48c', 'David Iulia', '0744 444 444', 'cosmin@yahoo.com', (SELECT address_id FROM address WHERE street = 'Independetei')),
+    ('c1de00ec-d5ca-46f0-a9f8-6b943aefd7c5', 'Popescu Adrian', '0744 444 444', 'adrian@yahoo.com', (SELECT address_id FROM address WHERE street = 'Lujerului')),
+    ('9a6b8df2-94b4-4a3f-8e7d-38b83353c639', 'Popescu Ionel', '0744 444 444', 'ionel@yahoo.com', (SELECT address_id FROM address WHERE street = 'Lujerului')),
+    ('f0401cca-41cc-4245-9414-f12aa8cace4a', 'Popescu Matei', '0744 444 444', 'matei@yahoo.com', (SELECT address_id FROM address WHERE street = 'Lujerului')),
+    ('740bb9fb-8d92-4888-980a-28e7f9a4a43a', 'Popescu Gabriela', '0744 444 444', 'gabriela@yahoo.com', (SELECT address_id FROM address WHERE street = 'Lujerului')),
+    ('0da54502-ac60-4efa-80dd-d1c4c7c6c7db', 'Popescu Nicoleta', '0755 555 555', 'nicoleta@yahoo.com', (SELECT address_id FROM address WHERE street = 'Calea Bucuresti'));
+    
+
+INSERT INTO professor (professor_id, salary, staffNumber, yearsOfService, numberOfClasses, person_id)
+VALUES
+    ('dffb10bf-2f98-41ba-b66d-d8110cc1b103', 63000, 102, 7, 4, (SELECT person_id FROM person WHERE name = 'David Iulia'));
+    
+    
+INSERT INTO student (student_id, studentNumber, averageMark, advisor_id, person_id)
+VALUES
+	('d60962fe-9bbb-47d5-a938-60fcb1495887', 1005, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Adrian')),
+    ('5c171201-a423-4ed9-8a98-df404cc2ef4c', 1006, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Ionel')),
+    ('0197b12b-d299-4400-811d-19f4f0a88182', 1007, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Matei')),
+    ('0317911c-f7da-43b5-9eb5-9fd64fe6c18e', 1008, 75, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Gabriela')),
+    ('15ce3b49-1f8e-4878-803d-af729b482633', 1009, 85, (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT person_id FROM person WHERE name = 'Popescu Nicoleta'));
+    
+    
+INSERT INTO advisorship (advisorship_id, professor_id, student_id)
+VALUES
+	('c49ade6a-9ba8-47df-bc47-5ed9bbfebc17', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1005)),
+    ('18f42c33-903c-4b4b-987a-234b87e6c424', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1006)),
+    ('167f8903-edf3-4dbe-b101-204b50d61252', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1007)),
+    ('432812fa-fb1d-4cf3-aeaf-272846dd5659', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1008)),
+    ('ef05e0b8-d676-476f-8e89-0638d06d842f', (SELECT professor_id FROM professor WHERE staffNumber = 101), (SELECT student_id FROM student WHERE studentNumber = 1009));
+
+    
+
